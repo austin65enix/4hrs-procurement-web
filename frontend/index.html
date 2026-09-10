@@ -1,0 +1,398 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>4HRS Procurement</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, "Microsoft JhengHei", sans-serif;
+    background: #f3f5f7;
+    color: #202124;
+}
+
+header {
+    background: #17212b;
+    color: white;
+    padding: 26px 40px;
+}
+
+header h1 {
+    margin: 0;
+}
+
+header p {
+    margin: 6px 0 0;
+    color: #b8c0c8;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 24px 40px 0;
+}
+
+.stat {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+.stat .number {
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    padding: 24px 40px 40px;
+}
+
+.card {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    margin-top: 6px;
+    padding: 11px;
+    border: 1px solid #ccd1d5;
+    border-radius: 7px;
+}
+
+button {
+    border: 0;
+    border-radius: 7px;
+    padding: 10px 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.submit {
+    margin-top: 22px;
+    width: 100%;
+    background: #2167d5;
+    color: white;
+}
+
+.request {
+    padding: 18px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.request:last-child {
+    border-bottom: 0;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.meta {
+    color: #667085;
+    margin-top: 6px;
+}
+
+.amount {
+    float: right;
+    font-weight: bold;
+    font-size: 17px;
+}
+
+.status {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 5px 11px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.PENDING {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.APPROVED {
+    background: #d9f7e5;
+    color: #176b38;
+}
+
+.REJECTED {
+    background: #fde2e2;
+    color: #9c1c1c;
+}
+
+.actions {
+    margin-top: 12px;
+}
+
+.approve {
+    background: #238636;
+    color: white;
+    margin-right: 8px;
+}
+
+.reject {
+    background: #c62828;
+    color: white;
+}
+
+.empty {
+    color: #777;
+    padding: 20px 0;
+}
+
+@media (max-width: 800px) {
+    .dashboard {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    main {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>4HRS Procurement</h1>
+<p>採購申請管理系統</p>
+</header>
+
+<section class="dashboard">
+
+<div class="stat">
+    <div>總申請</div>
+    <div id="total" class="number">0</div>
+</div>
+
+<div class="stat">
+    <div>待審核</div>
+    <div id="pending" class="number">0</div>
+</div>
+
+<div class="stat">
+    <div>已核准</div>
+    <div id="approved" class="number">0</div>
+</div>
+
+<div class="stat">
+    <div>已駁回</div>
+    <div id="rejected" class="number">0</div>
+</div>
+
+</section>
+
+<main>
+
+<section class="card">
+
+<h2>新增採購申請</h2>
+
+<form id="form">
+
+<label>申請人</label>
+<input id="applicant" value="Austin" required>
+
+<label>採購品項</label>
+<input id="item_name"
+       placeholder="例如：VAIO F14 32GB"
+       required>
+
+<label>數量</label>
+<input id="quantity"
+       type="number"
+       value="1"
+       min="1"
+       required>
+
+<label>單價</label>
+<input id="unit_price"
+       type="number"
+       placeholder="46999"
+       min="1"
+       required>
+
+<button class="submit" type="submit">
+建立採購申請
+</button>
+
+</form>
+
+</section>
+
+<section class="card">
+
+<h2>採購申請</h2>
+
+<div id="requests">
+載入中...
+</div>
+
+</section>
+
+</main>
+
+<script>
+
+async function loadRequests() {
+
+    const response = await fetch('/requests');
+    const rows = await response.json();
+
+    document.getElementById('total').textContent =
+        rows.length;
+
+    document.getElementById('pending').textContent =
+        rows.filter(r => r.status === 'PENDING').length;
+
+    document.getElementById('approved').textContent =
+        rows.filter(r => r.status === 'APPROVED').length;
+
+    document.getElementById('rejected').textContent =
+        rows.filter(r => r.status === 'REJECTED').length;
+
+    const container =
+        document.getElementById('requests');
+
+    if (rows.length === 0) {
+        container.innerHTML =
+            '<div class="empty">目前沒有採購申請</div>';
+        return;
+    }
+
+    container.innerHTML = rows.map(r => `
+
+        <div class="request">
+
+            <span class="amount">
+                NT$${Number(r.total_amount).toLocaleString()}
+            </span>
+
+            <div class="title">
+                #${r.id} ${r.item_name}
+            </div>
+
+            <div class="meta">
+                申請人：${r.applicant}
+                ・ 數量：${r.quantity}
+            </div>
+
+            <span class="status ${r.status}">
+                ${r.status}
+            </span>
+
+            ${
+                r.status === 'PENDING'
+                ? `
+                <div class="actions">
+
+                    <button
+                        class="approve"
+                        onclick="decide(${r.id}, 'approve')">
+                        核准
+                    </button>
+
+                    <button
+                        class="reject"
+                        onclick="decide(${r.id}, 'reject')">
+                        駁回
+                    </button>
+
+                </div>
+                `
+                : ''
+            }
+
+        </div>
+
+    `).join('');
+}
+
+
+async function decide(id, action) {
+
+    const response = await fetch(
+        `/requests/${id}/${action}`,
+        { method: 'POST' }
+    );
+
+    if (!response.ok) {
+        const data = await response.json();
+        alert(data.detail || '狀態更新失敗');
+        return;
+    }
+
+    await loadRequests();
+}
+
+
+document.getElementById('form')
+.addEventListener('submit', async e => {
+
+    e.preventDefault();
+
+    const body = {
+        applicant:
+            document.getElementById('applicant').value,
+
+        item_name:
+            document.getElementById('item_name').value,
+
+        quantity:
+            Number(document.getElementById('quantity').value),
+
+        unit_price:
+            Number(document.getElementById('unit_price').value)
+    };
+
+    const response = await fetch('/requests', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+        alert('建立失敗');
+        return;
+    }
+
+    document.getElementById('item_name').value = '';
+    document.getElementById('unit_price').value = '';
+
+    await loadRequests();
+});
+
+
+loadRequests();
+
+</script>
+
+</body>
+</html>
