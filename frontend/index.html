@@ -178,6 +178,19 @@ button {
     background: white;
 }
 
+.filter-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+#export-csv {
+    background: #2167d5;
+    color: white;
+    padding: 8px 12px;
+}
 .filter-summary {
     margin-top: 8px;
     color: #667085;
@@ -555,10 +568,20 @@ button {
 
     </div>
 
+    <div class="filter-footer">
+
     <div id="filter-summary"
          class="filter-summary">
         載入中...
     </div>
+
+    <button
+        id="export-csv"
+        type="button">
+        匯出 CSV
+    </button>
+
+</div>
 
 </div>
 
@@ -853,6 +876,99 @@ function getFilteredRequests() {
 }
 
 
+function csvEscape(value) {
+
+    const text =
+        String(value ?? '');
+
+    if (
+        text.includes(',') ||
+        text.includes('"') ||
+        text.includes('\n')
+    ) {
+        return `"${text.replace(/"/g, '""')}"`;
+    }
+
+    return text;
+}
+
+
+function exportFilteredRequests() {
+
+    const rows =
+        getFilteredRequests();
+
+    if (!rows.length) {
+        alert('目前沒有可匯出的資料');
+        return;
+    }
+
+    const header = [
+        'id',
+        'applicant',
+        'item_name',
+        'quantity',
+        'unit_price',
+        'total_amount',
+        'status'
+    ];
+
+    const csvRows = [
+        header.join(',')
+    ];
+
+    rows.forEach(r => {
+
+        csvRows.push([
+            r.id,
+            r.applicant,
+            r.item_name,
+            r.quantity,
+            r.unit_price,
+            r.total_amount,
+            r.status
+        ]
+        .map(csvEscape)
+        .join(','));
+    });
+
+    const csv =
+        '\uFEFF' + csvRows.join('\r\n');
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                    'text/csv;charset=utf-8;'
+            }
+        );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const link =
+        document.createElement('a');
+
+    const stamp =
+        new Date()
+            .toISOString()
+            .slice(0, 10);
+
+    link.href = url;
+
+    link.download =
+        `4hrs-procurement-${stamp}.csv`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(url);
+}
+
 function renderRequestList() {
 
     const rows =
@@ -1029,6 +1145,14 @@ document
     .addEventListener(
         'change',
         renderRequestList
+    );
+
+
+document
+    .getElementById('export-csv')
+    .addEventListener(
+        'click',
+        exportFilteredRequests
     );
 
 
