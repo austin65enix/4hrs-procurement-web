@@ -159,6 +159,36 @@ button {
     color: white;
 }
 
+.request-tools {
+    margin: 14px 0 18px;
+}
+
+.request-filter-row {
+    display: grid;
+    grid-template-columns: 1fr 170px;
+    gap: 10px;
+}
+
+.request-filter-row input,
+.request-filter-row select {
+    width: 100%;
+    padding: 10px 11px;
+    border: 1px solid #ccd1d5;
+    border-radius: 7px;
+    background: white;
+}
+
+.filter-summary {
+    margin-top: 8px;
+    color: #667085;
+    font-size: 13px;
+}
+
+@media (max-width: 650px) {
+    .request-filter-row {
+        grid-template-columns: 1fr;
+    }
+}
 .empty {
     color: #777;
     padding: 20px 0;
@@ -507,6 +537,31 @@ button {
 
 <h2>採購申請</h2>
 
+<div class="request-tools">
+
+    <div class="request-filter-row">
+
+        <input
+            id="request-search"
+            type="search"
+            placeholder="搜尋 #編號、申請人、採購品項">
+
+        <select id="status-filter">
+            <option value="ALL">全部狀態</option>
+            <option value="PENDING">待審核 PENDING</option>
+            <option value="APPROVED">已核准 APPROVED</option>
+            <option value="REJECTED">已駁回 REJECTED</option>
+        </select>
+
+    </div>
+
+    <div id="filter-summary"
+         class="filter-summary">
+        載入中...
+    </div>
+
+</div>
+
 <div id="requests">
 載入中...
 </div>
@@ -756,54 +811,91 @@ function renderRequestGrowth(rows) {
         .join('');
 }
 
-async function loadRequests() {
+let allRequests = [];
 
-    const response = await fetch('/requests');
-    const rows = await response.json();
 
-    renderRequestGrowth(rows);
-    renderRecentRequests(rows);
+function getFilteredRequests() {
 
-    document.getElementById('total').textContent =
-        rows.length;
+    const keyword =
+        document
+            .getElementById('request-search')
+            .value
+            .trim()
+            .toLowerCase();
 
-    document.getElementById('pending').textContent =
-        rows.filter(r => r.status === 'PENDING').length;
+    const status =
+        document
+            .getElementById('status-filter')
+            .value;
 
-    document.getElementById('approved').textContent =
-        rows.filter(r => r.status === 'APPROVED').length;
+    return allRequests.filter(r => {
 
-    document.getElementById('rejected').textContent =
-        rows.filter(r => r.status === 'REJECTED').length;
+        const searchable = [
+            `#${r.id}`,
+            r.id,
+            r.applicant,
+            r.item_name,
+            r.status
+        ]
+        .join(' ')
+        .toLowerCase();
+
+        const keywordMatch =
+            !keyword ||
+            searchable.includes(keyword);
+
+        const statusMatch =
+            status === 'ALL' ||
+            r.status === status;
+
+        return keywordMatch && statusMatch;
+    });
+}
+
+
+function renderRequestList() {
+
+    const rows =
+        getFilteredRequests();
 
     const container =
         document.getElementById('requests');
 
+    const summary =
+        document.getElementById('filter-summary');
+
+    summary.textContent =
+        `顯示 ${rows.length} / ${allRequests.length} 筆`;
+
     if (rows.length === 0) {
+
         container.innerHTML =
-            '<div class="empty">目前沒有採購申請</div>';
+            '<div class="empty">查無符合條件的採購申請</div>';
+
         return;
     }
 
-    container.innerHTML = rows.map(r => `
+    container.innerHTML =
+        rows.map(r => `
 
         <div class="request">
 
             <span class="amount">
-                NT$${Number(r.total_amount).toLocaleString()}
+                NT${Number(r.total_amount).toLocaleString()}
             </span>
 
             <div class="title">
-                #${r.id} ${r.item_name}
+                #${escapeHtml(r.id)}
+                ${escapeHtml(r.item_name)}
             </div>
 
             <div class="meta">
-                申請人：${r.applicant}
-                ・ 數量：${r.quantity}
+                申請人：${escapeHtml(r.applicant)}
+                ・ 數量：${escapeHtml(r.quantity)}
             </div>
 
             <span class="status ${r.status}">
-                ${r.status}
+                ${escapeHtml(r.status)}
             </span>
 
             ${
@@ -830,7 +922,42 @@ async function loadRequests() {
 
         </div>
 
-    `).join('');
+        `).join('');
+}
+
+
+async function loadRequests() {
+
+    const response =
+        await fetch('/requests');
+
+    const rows =
+        await response.json();
+
+    allRequests = rows;
+
+    renderRequestGrowth(rows);
+    renderRecentRequests(rows);
+
+    document.getElementById('total').textContent =
+        rows.length;
+
+    document.getElementById('pending').textContent =
+        rows.filter(
+            r => r.status === 'PENDING'
+        ).length;
+
+    document.getElementById('approved').textContent =
+        rows.filter(
+            r => r.status === 'APPROVED'
+        ).length;
+
+    document.getElementById('rejected').textContent =
+        rows.filter(
+            r => r.status === 'REJECTED'
+        ).length;
+
+    renderRequestList();
 }
 
 
@@ -890,8 +1017,22 @@ document.getElementById('form')
 });
 
 
-loadRequests();
+document
+    .getElementById('request-search')
+    .addEventListener(
+        'input',
+        renderRequestList
+    );
 
+document
+    .getElementById('status-filter')
+    .addEventListener(
+        'change',
+        renderRequestList
+    );
+
+
+loadRequests();
 </script>
 
 </body>
