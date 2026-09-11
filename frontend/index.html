@@ -281,6 +281,19 @@ button {
     transform: translateY(-3px);
 }
 
+/* P03-R5 - sparse dataset presentation */
+.growth-bars.sparse {
+    justify-content: center;
+}
+
+.growth-bars.sparse .growth-col {
+    flex: 0 1 140px;
+    max-width: 140px;
+}
+
+.growth-bars.sparse .growth-track {
+    width: 100%;
+}
 .growth-label {
     margin-top: 7px;
     color: #64748b;
@@ -701,6 +714,10 @@ function renderRequestGrowth(rows) {
             ...points.map(p => p.value),
             1
         );
+    container.classList.toggle(
+        'sparse',
+        points.length <= 2
+    );
 
     container.innerHTML =
         points.map(p => {
