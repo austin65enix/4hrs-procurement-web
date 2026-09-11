@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 import sqlite3
 
@@ -64,6 +64,20 @@ def list_requests():
             "SELECT * FROM purchase_requests ORDER BY id DESC"
         ).fetchall()
     return [dict(row) for row in rows]
+
+
+@app.get("/requests/{request_id}")
+def get_request(request_id: int):
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM purchase_requests WHERE id=?",
+            (request_id,)
+        ).fetchone()
+
+    if row is None:
+        raise HTTPException(404, "Request not found")
+
+    return dict(row)
 
 
 @app.post("/requests")

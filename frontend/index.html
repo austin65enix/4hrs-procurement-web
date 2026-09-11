@@ -202,6 +202,40 @@ button {
         grid-template-columns: 1fr;
     }
 }
+.detail-actions {
+    margin-top: 10px;
+}
+
+.detail-toggle {
+    background: #eef2f7;
+    color: #344054;
+    padding: 7px 12px;
+}
+
+.request-detail {
+    margin-top: 12px;
+    padding: 14px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 9px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 8px 14px;
+    font-size: 14px;
+}
+
+.detail-label {
+    color: #667085;
+    font-weight: bold;
+}
+
+.detail-value {
+    color: #202124;
+    word-break: break-word;
+}
 .empty {
     color: #777;
     padding: 20px 0;
@@ -969,6 +1003,105 @@ function exportFilteredRequests() {
     URL.revokeObjectURL(url);
 }
 
+async function toggleRequestDetail(id) {
+
+    const panel =
+        document.getElementById(`detail-${id}`);
+
+    if (!panel) {
+        return;
+    }
+
+    if (!panel.hidden) {
+        panel.hidden = true;
+        return;
+    }
+
+    if (panel.dataset.loaded === '1') {
+        panel.hidden = false;
+        return;
+    }
+
+    panel.hidden = false;
+    panel.innerHTML = '詳細資料載入中...';
+
+    const response =
+        await fetch(`/requests/${id}`);
+
+    if (!response.ok) {
+
+        panel.innerHTML =
+            '<div class="empty">詳細資料讀取失敗</div>';
+
+        return;
+    }
+
+    const r =
+        await response.json();
+
+    let createdAt =
+        r.created_at || '-';
+
+    if (r.created_at) {
+
+        const date =
+            new Date(r.created_at);
+
+        if (!Number.isNaN(date.getTime())) {
+            createdAt =
+                date.toLocaleString('zh-TW');
+        }
+    }
+
+    panel.innerHTML = `
+        <div class="detail-grid">
+
+            <div class="detail-label">Request ID</div>
+            <div class="detail-value">
+                #${escapeHtml(r.id)}
+            </div>
+
+            <div class="detail-label">申請人</div>
+            <div class="detail-value">
+                ${escapeHtml(r.applicant)}
+            </div>
+
+            <div class="detail-label">採購品項</div>
+            <div class="detail-value">
+                ${escapeHtml(r.item_name)}
+            </div>
+
+            <div class="detail-label">數量</div>
+            <div class="detail-value">
+                ${escapeHtml(r.quantity)}
+            </div>
+
+            <div class="detail-label">單價</div>
+            <div class="detail-value">
+                NT$${formatMoney(r.unit_price)}
+            </div>
+
+            <div class="detail-label">總金額</div>
+            <div class="detail-value">
+                NT$${formatMoney(r.total_amount)}
+            </div>
+
+            <div class="detail-label">狀態</div>
+            <div class="detail-value">
+                ${escapeHtml(r.status)}
+            </div>
+
+            <div class="detail-label">建立時間</div>
+            <div class="detail-value">
+                ${escapeHtml(createdAt)}
+            </div>
+
+        </div>
+    `;
+
+    panel.dataset.loaded = '1';
+}
+
 function renderRequestList() {
 
     const rows =
@@ -1013,6 +1146,20 @@ function renderRequestList() {
             <span class="status ${r.status}">
                 ${escapeHtml(r.status)}
             </span>
+            <div class="detail-actions">
+                <button
+                    type="button"
+                    class="detail-toggle"
+                    onclick="toggleRequestDetail(${r.id})">
+                    查看詳細
+                </button>
+            </div>
+
+            <div
+                id="detail-${r.id}"
+                class="request-detail"
+                hidden>
+            </div>
 
             ${
                 r.status === 'PENDING'
