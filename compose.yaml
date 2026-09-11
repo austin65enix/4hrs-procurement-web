@@ -1,0 +1,25 @@
+services:
+  procurement:
+    build:
+      context: .
+    image: 4hrs-procurement-web:p02-r9
+    container_name: 4hrs-procurement-p02
+    ports:
+      - "8000:8000"
+    volumes:
+      - procurement-data:/app/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  procurement-data:
