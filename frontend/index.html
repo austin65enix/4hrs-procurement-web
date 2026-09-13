@@ -717,6 +717,29 @@ main > .workspace-view {
     color: white;
 }
 
+
+/* P05-W5-C - Decision Evidence View */
+
+.history-evidence {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #e2e8f0;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.history-evidence-label {
+    display: inline-block;
+    min-width: 64px;
+    color: #64748b;
+}
+
+.decision-note-value {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
 </style>
 </head>
 
@@ -1417,6 +1440,23 @@ function formatDateTime(value, fallback = '未記錄') {
     return date.toLocaleString('zh-TW');
 }
 
+function formatDecisionField(
+    value,
+    status
+) {
+
+    const text =
+        String(value ?? '').trim();
+
+    if (text) {
+        return text;
+    }
+
+    return status === 'PENDING'
+        ? '尚未審核'
+        : '未記錄';
+}
+
 async function toggleRequestDetail(id) {
 
     const panel =
@@ -1467,7 +1507,20 @@ async function toggleRequestDetail(id) {
                 '未記錄'
             );
 
+    const decidedBy =
+        formatDecisionField(
+            r.decided_by,
+            r.status
+        );
+
+    const decisionNote =
+        formatDecisionField(
+            r.decision_note,
+            r.status
+        );
+
     // P05-W4-ADJ1 - Detail Timestamp Consistency
+    // P05-W5-C - Decision Evidence View
 
     panel.innerHTML = `
         <div class="detail-grid">
@@ -1507,7 +1560,17 @@ async function toggleRequestDetail(id) {
                 ${escapeHtml(r.status)}
             </div>
 
-                        <div class="detail-label">申請時間</div>
+                                    <div class="detail-label">審核人</div>
+            <div class="detail-value">
+                ${escapeHtml(decidedBy)}
+            </div>
+
+            <div class="detail-label">審核理由</div>
+            <div class="detail-value decision-note-value">
+                ${escapeHtml(decisionNote)}
+            </div>
+
+            <div class="detail-label">申請時間</div>
             <div class="detail-value">
                 ${escapeHtml(createdAt)}
             </div>
@@ -1699,6 +1762,18 @@ function renderHistory(rows) {
                     '未記錄'
                 );
 
+            const decidedBy =
+                formatDecisionField(
+                    r.decided_by,
+                    r.status
+                );
+
+            const decisionNote =
+                formatDecisionField(
+                    r.decision_note,
+                    r.status
+                );
+
 
             return `
                 <div class="history-item">
@@ -1727,7 +1802,7 @@ function renderHistory(rows) {
                     </div>
 
 
-                    <div class="history-item-footer">
+                                        <div class="history-item-footer">
 
                         <span class="status ${r.status}">
                             ${escapeHtml(r.status)}
@@ -1749,6 +1824,27 @@ function renderHistory(rows) {
                                 ${escapeHtml(decided)}
                             </div>
 
+                        </div>
+
+                    </div>
+
+                    <div class="history-evidence">
+
+                        <div>
+                            <span class="history-evidence-label">
+                                審核人
+                            </span>
+                            ${escapeHtml(decidedBy)}
+                        </div>
+
+                        <div>
+                            <span class="history-evidence-label">
+                                審核理由
+                            </span>
+
+                            <span class="decision-note-value">
+                                ${escapeHtml(decisionNote)}
+                            </span>
                         </div>
 
                     </div>
