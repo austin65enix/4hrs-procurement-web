@@ -609,6 +609,8 @@ main > .workspace-view {
     border-radius: 10px;
 }
 
+
+/* P05-W3 - Workflow Handoff */
 </style>
 </head>
 
@@ -1588,6 +1590,8 @@ async function decide(id, action) {
     }
 
     await loadRequests();
+
+    showWorkspace('requests');
 }
 
 
@@ -1623,10 +1627,27 @@ document.getElementById('form')
         return;
     }
 
+    const created =
+        await response.json();
+
     document.getElementById('item_name').value = '';
     document.getElementById('unit_price').value = '';
 
+    document.getElementById('request-search').value = '';
+
+    document.getElementById('status-filter').value =
+        'PENDING';
+
     await loadRequests();
+
+    showWorkspace('requests');
+
+    console.info(
+        'P05-W3 - Workflow Handoff',
+        'Created request',
+        created.id,
+        created.status
+    );
 });
 
 
