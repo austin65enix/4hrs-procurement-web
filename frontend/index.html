@@ -529,6 +529,86 @@ main > .workspace-view {
     }
 }
 
+
+/* P05-W2 - History Workspace */
+
+.history-summary {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 16px 0 18px;
+}
+
+.history-summary-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #475569;
+    font-size: 13px;
+}
+
+.history-summary-item strong {
+    color: #0f172a;
+    margin-left: 4px;
+}
+
+.history-list {
+    display: grid;
+    gap: 10px;
+}
+
+.history-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: #ffffff;
+}
+
+.history-item-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.history-item-title {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.history-item-amount {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.history-item-meta {
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.history-item-footer {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.history-date {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.history-empty {
+    padding: 24px;
+    text-align: center;
+    color: #64748b;
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
 </style>
 </head>
 
@@ -762,9 +842,14 @@ main > .workspace-view {
             已核准與已駁回案件將在下一工序載入。
         </p>
 
-        <div id="history-list">
-            History workspace ready.
-        </div>
+        <div id="history-summary"
+     class="history-summary">
+</div>
+
+<div id="history-list"
+     class="history-list">
+    載入歷史資料中...
+</div>
 
     </div>
 
@@ -1334,6 +1419,125 @@ function renderRequestList() {
 }
 
 
+function renderHistory(rows) {
+
+    const historyRows =
+        [...rows]
+            .filter(r =>
+                r.status === 'APPROVED' ||
+                r.status === 'REJECTED'
+            )
+            .sort(
+                (a, b) =>
+                    Number(b.id) - Number(a.id)
+            );
+
+
+    const approvedCount =
+        historyRows.filter(
+            r => r.status === 'APPROVED'
+        ).length;
+
+
+    const rejectedCount =
+        historyRows.filter(
+            r => r.status === 'REJECTED'
+        ).length;
+
+
+    const summary =
+        document.getElementById('history-summary');
+
+
+    summary.innerHTML = `
+        <div class="history-summary-item">
+            已結案
+            <strong>${historyRows.length}</strong>
+        </div>
+
+        <div class="history-summary-item">
+            已核准
+            <strong>${approvedCount}</strong>
+        </div>
+
+        <div class="history-summary-item">
+            已駁回
+            <strong>${rejectedCount}</strong>
+        </div>
+    `;
+
+
+    const container =
+        document.getElementById('history-list');
+
+
+    if (!historyRows.length) {
+
+        container.innerHTML = `
+            <div class="history-empty">
+                目前沒有已結案的採購申請
+            </div>
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML =
+        historyRows.map(r => {
+
+            const created =
+                r.created_at
+                ? new Date(r.created_at)
+                    .toLocaleString()
+                : '時間未提供';
+
+
+            return `
+                <div class="history-item">
+
+                    <div class="history-item-header">
+
+                        <div class="history-item-title">
+                            #${escapeHtml(r.id)}
+                            ${escapeHtml(r.item_name)}
+                        </div>
+
+                        <div class="history-item-amount">
+                            NT$${Number(
+                                r.total_amount
+                            ).toLocaleString()}
+                        </div>
+
+                    </div>
+
+
+                    <div class="history-item-meta">
+                        申請人：
+                        ${escapeHtml(r.applicant)}
+                        ・ 數量：
+                        ${escapeHtml(r.quantity)}
+                    </div>
+
+
+                    <div class="history-item-footer">
+
+                        <span class="status ${r.status}">
+                            ${escapeHtml(r.status)}
+                        </span>
+
+                        <span class="history-date">
+                            ${escapeHtml(created)}
+                        </span>
+
+                    </div>
+
+                </div>
+            `;
+        })
+        .join('');
+}
+
 async function loadRequests() {
 
     const response =
@@ -1346,6 +1550,7 @@ async function loadRequests() {
 
     renderRequestGrowth(rows);
     renderRecentRequests(rows);
+    renderHistory(rows);
 
     document.getElementById('total').textContent =
         rows.length;
