@@ -32,10 +32,28 @@ def init_db():
                 unit_price REAL NOT NULL,
                 total_amount REAL NOT NULL,
                 status TEXT NOT NULL,
-                created_at TEXT NOT NULL
+                created_at TEXT NOT NULL,
+                decided_at TEXT
             )
         """)
 
+        columns = {
+            row["name"]
+            for row in conn.execute(
+                "PRAGMA table_info(purchase_requests)"
+            ).fetchall()
+        }
+
+        if "decided_at" not in columns:
+            conn.execute(
+                "ALTER TABLE purchase_requests "
+                "ADD COLUMN decided_at TEXT"
+            )
+
+        conn.commit()
+
+
+# P05-W4 - Request / Decision Timestamps
 
 init_db()
 
@@ -105,6 +123,8 @@ def create_request(request: PurchaseRequestCreate):
 
 
 def change_status(request_id: int, new_status: str):
+    decided_at = datetime.now(timezone.utc).isoformat()
+
     with get_db() as conn:
         row = conn.execute(
             "SELECT status FROM purchase_requests WHERE id=?",
@@ -118,13 +138,25 @@ def change_status(request_id: int, new_status: str):
             raise HTTPException(409, "Request already decided")
 
         conn.execute(
-            "UPDATE purchase_requests SET status=? WHERE id=?",
-            (new_status, request_id)
+            """
+            UPDATE purchase_requests
+            SET status=?, decided_at=?
+            WHERE id=?
+            """,
+            (
+                new_status,
+                decided_at,
+                request_id
+            )
         )
+
         conn.commit()
 
-    return {"id": request_id, "status": new_status}
-
+    return {
+        "id": request_id,
+        "status": new_status,
+        "decided_at": decided_at
+    }
 
 @app.post("/requests/{request_id}/approve")
 def approve_request(request_id: int):

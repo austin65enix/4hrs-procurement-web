@@ -611,6 +611,39 @@ main > .workspace-view {
 
 
 /* P05-W3 - Workflow Handoff */
+
+/* P05-W4 - Timestamp Presentation */
+
+.request-created-at {
+    margin-top: 6px;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.history-times {
+    text-align: right;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.history-time-label {
+    color: #64748b;
+    margin-right: 6px;
+}
+
+@media (max-width: 760px) {
+
+    .history-item-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .history-times {
+        text-align: left;
+    }
+}
+
 </style>
 </head>
 
@@ -1235,6 +1268,22 @@ function exportFilteredRequests() {
     URL.revokeObjectURL(url);
 }
 
+function formatDateTime(value, fallback = '未記錄') {
+
+    if (!value) {
+        return fallback;
+    }
+
+    const date =
+        new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return fallback;
+    }
+
+    return date.toLocaleString('zh-TW');
+}
+
 async function toggleRequestDetail(id) {
 
     const panel =
@@ -1375,6 +1424,16 @@ function renderRequestList() {
                 ・ 數量：${escapeHtml(r.quantity)}
             </div>
 
+            <div class="request-created-at">
+                申請時間：
+                ${escapeHtml(
+                    formatDateTime(
+                        r.created_at,
+                        '時間未提供'
+                    )
+                )}
+            </div>
+
             <span class="status ${r.status}">
                 ${escapeHtml(r.status)}
             </span>
@@ -1489,10 +1548,16 @@ function renderHistory(rows) {
         historyRows.map(r => {
 
             const created =
-                r.created_at
-                ? new Date(r.created_at)
-                    .toLocaleString()
-                : '時間未提供';
+                formatDateTime(
+                    r.created_at,
+                    '時間未提供'
+                );
+
+            const decided =
+                formatDateTime(
+                    r.decided_at,
+                    '未記錄'
+                );
 
 
             return `
@@ -1528,9 +1593,23 @@ function renderHistory(rows) {
                             ${escapeHtml(r.status)}
                         </span>
 
-                        <span class="history-date">
-                            ${escapeHtml(created)}
-                        </span>
+                        <div class="history-times">
+
+                            <div>
+                                <span class="history-time-label">
+                                    申請時間
+                                </span>
+                                ${escapeHtml(created)}
+                            </div>
+
+                            <div>
+                                <span class="history-time-label">
+                                    審核時間
+                                </span>
+                                ${escapeHtml(decided)}
+                            </div>
+
+                        </div>
 
                     </div>
 
