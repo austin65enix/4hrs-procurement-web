@@ -459,6 +459,76 @@ button {
         font-size: 10px;
     }
 }
+
+/* P05-W1 - Procurement Workspace */
+
+.workspace-nav {
+    margin: 20px 28px 0;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 12px;
+}
+
+.workspace-nav-inner {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.workspace-tab {
+    padding: 10px 18px;
+    border: 1px solid #d7dee8;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.workspace-tab:hover {
+    background: #edf4ff;
+}
+
+.workspace-tab.active {
+    background: #2167d5;
+    border-color: #2167d5;
+    color: white;
+}
+
+.workspace-view {
+    display: none;
+}
+
+.workspace-view.active {
+    display: block;
+}
+
+main > .workspace-view {
+    grid-column: 1 / -1;
+}
+
+.workspace-history-shell {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.workspace-history-shell p {
+    color: #64748b;
+}
+
+@media (max-width: 760px) {
+
+    .workspace-nav {
+        margin-left: 16px;
+        margin-right: 16px;
+    }
+
+    .workspace-tab {
+        flex: 1 1 calc(50% - 8px);
+    }
+}
+
 </style>
 </head>
 
@@ -468,6 +538,44 @@ button {
 <h1>4HRS Procurement</h1>
 <p>採購申請管理系統</p>
 </header>
+
+<nav class="workspace-nav"
+     aria-label="Procurement Workspace">
+
+    <div class="workspace-nav-inner">
+
+        <button type="button"
+                class="workspace-tab active"
+                data-workspace-target="dashboard">
+            Dashboard
+        </button>
+
+        <button type="button"
+                class="workspace-tab"
+                data-workspace-target="new-request">
+            New Request
+        </button>
+
+        <button type="button"
+                class="workspace-tab"
+                data-workspace-target="requests">
+            Requests
+        </button>
+
+        <button type="button"
+                class="workspace-tab"
+                data-workspace-target="history">
+            History
+        </button>
+
+    </div>
+
+</nav>
+
+<section
+    id="workspace-dashboard"
+    class="workspace-view active"
+    data-workspace-view="dashboard">
 
 <section class="dashboard">
 
@@ -542,7 +650,14 @@ button {
 
 </section>
 
+</section>
+
 <main>
+
+<section
+    id="workspace-new-request"
+    class="workspace-view"
+    data-workspace-view="new-request">
 
 <section class="card">
 
@@ -579,6 +694,13 @@ button {
 </form>
 
 </section>
+
+</section>
+
+<section
+    id="workspace-requests"
+    class="workspace-view"
+    data-workspace-view="requests">
 
 <section class="card">
 
@@ -622,6 +744,29 @@ button {
 <div id="requests">
 載入中...
 </div>
+
+</section>
+
+</section>
+
+<section
+    id="workspace-history"
+    class="workspace-view"
+    data-workspace-view="history">
+
+    <div class="workspace-history-shell">
+
+        <h2>歷史資料</h2>
+
+        <p>
+            已核准與已駁回案件將在下一工序載入。
+        </p>
+
+        <div id="history-list">
+            History workspace ready.
+        </div>
+
+    </div>
 
 </section>
 
@@ -1302,6 +1447,53 @@ document
         exportFilteredRequests
     );
 
+
+
+function showWorkspace(name) {
+
+    document
+        .querySelectorAll('[data-workspace-view]')
+        .forEach(view => {
+
+            view.classList.toggle(
+                'active',
+                view.dataset.workspaceView === name
+            );
+        });
+
+
+    document
+        .querySelectorAll('[data-workspace-target]')
+        .forEach(button => {
+
+            button.classList.toggle(
+                'active',
+                button.dataset.workspaceTarget === name
+            );
+        });
+
+
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+
+document
+    .querySelectorAll('[data-workspace-target]')
+    .forEach(button => {
+
+        button.addEventListener(
+            'click',
+            () => showWorkspace(
+                button.dataset.workspaceTarget
+            )
+        );
+    });
+
+
+showWorkspace('dashboard');
 
 loadRequests();
 </script>
