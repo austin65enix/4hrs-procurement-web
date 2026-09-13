@@ -151,8 +151,27 @@ def create_request(request: PurchaseRequestCreate):
     return {"id": cur.lastrowid, "status": "PENDING"}
 
 
-def change_status(request_id: int, new_status: str):
+def change_status(
+    request_id: int,
+    new_status: str,
+    metadata: DecisionMetadata
+):
     decided_at = datetime.now(timezone.utc).isoformat()
+
+    decided_by = metadata.decided_by.strip()
+    decision_note = metadata.decision_note.strip()
+
+    if not decided_by:
+        raise HTTPException(
+            422,
+            "decided_by must not be blank"
+        )
+
+    if not decision_note:
+        raise HTTPException(
+            422,
+            "decision_note must not be blank"
+        )
 
     with get_db() as conn:
         row = conn.execute(
@@ -169,12 +188,18 @@ def change_status(request_id: int, new_status: str):
         conn.execute(
             """
             UPDATE purchase_requests
-            SET status=?, decided_at=?
+            SET
+                status=?,
+                decided_at=?,
+                decided_by=?,
+                decision_note=?
             WHERE id=?
             """,
             (
                 new_status,
                 decided_at,
+                decided_by,
+                decision_note,
                 request_id
             )
         )
@@ -184,14 +209,34 @@ def change_status(request_id: int, new_status: str):
     return {
         "id": request_id,
         "status": new_status,
-        "decided_at": decided_at
+        "decided_at": decided_at,
+        "decided_by": decided_by,
+        "decision_note": decision_note
     }
 
+
+# P05-W5-B - Decision Input Binding
+
+
 @app.post("/requests/{request_id}/approve")
-def approve_request(request_id: int):
-    return change_status(request_id, "APPROVED")
+def approve_request(
+    request_id: int,
+    metadata: DecisionMetadata
+):
+    return change_status(
+        request_id,
+        "APPROVED",
+        metadata
+    )
 
 
 @app.post("/requests/{request_id}/reject")
-def reject_request(request_id: int):
-    return change_status(request_id, "REJECTED")
+def reject_request(
+    request_id: int,
+    metadata: DecisionMetadata
+):
+    return change_status(
+        request_id,
+        "REJECTED",
+        metadata
+    )

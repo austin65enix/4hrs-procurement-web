@@ -644,6 +644,79 @@ main > .workspace-view {
     }
 }
 
+
+/* P05-W5-B - Decision Input */
+
+.decision-dialog {
+    width: min(520px, calc(100vw - 32px));
+    border: 0;
+    border-radius: 14px;
+    padding: 0;
+    box-shadow:
+        0 24px 60px rgba(15, 23, 42, 0.28);
+}
+
+.decision-dialog::backdrop {
+    background: rgba(15, 23, 42, 0.48);
+}
+
+.decision-dialog-body {
+    padding: 24px;
+}
+
+.decision-dialog h3 {
+    margin: 0 0 6px;
+}
+
+.decision-context {
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.decision-dialog label {
+    display: block;
+    margin: 14px 0 6px;
+    font-weight: 600;
+}
+
+.decision-dialog input,
+.decision-dialog textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font: inherit;
+}
+
+.decision-dialog textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.decision-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.decision-cancel {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.decision-confirm.approve {
+    background: #15803d;
+    color: white;
+}
+
+.decision-confirm.reject {
+    background: #dc2626;
+    color: white;
+}
+
 </style>
 </head>
 
@@ -892,6 +965,66 @@ main > .workspace-view {
 
 </main>
 
+<dialog
+    id="decision-dialog"
+    class="decision-dialog">
+
+    <form id="decision-form">
+
+        <div class="decision-dialog-body">
+
+            <h3 id="decision-title">
+                審核決策
+            </h3>
+
+            <div
+                id="decision-context"
+                class="decision-context">
+            </div>
+
+            <label for="decision-actor">
+                審核人
+            </label>
+
+            <input
+                id="decision-actor"
+                maxlength="100"
+                value="Austin"
+                required>
+
+            <label for="decision-note">
+                審核理由
+            </label>
+
+            <textarea
+                id="decision-note"
+                maxlength="500"
+                placeholder="請輸入此次核准或駁回的理由"
+                required></textarea>
+
+            <div class="decision-dialog-actions">
+
+                <button
+                    id="decision-cancel"
+                    class="decision-cancel"
+                    type="button">
+                    取消
+                </button>
+
+                <button
+                    id="decision-confirm"
+                    class="decision-confirm"
+                    type="submit">
+                    確認
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</dialog>
 <script>
 
 function escapeHtml(value) {
@@ -1466,13 +1599,13 @@ function renderRequestList() {
 
                     <button
                         class="approve"
-                        onclick="decide(${r.id}, 'approve')">
+                        onclick="openDecisionDialog(${r.id}, 'approve')">
                         核准
                     </button>
 
                     <button
                         class="reject"
-                        onclick="decide(${r.id}, 'reject')">
+                        onclick="openDecisionDialog(${r.id}, 'reject')">
                         駁回
                     </button>
 
@@ -1662,24 +1795,211 @@ async function loadRequests() {
 }
 
 
-async function decide(id, action) {
+let pendingDecision = null;
 
-    const response = await fetch(
-        `/requests/${id}/${action}`,
-        { method: 'POST' }
-    );
 
-    if (!response.ok) {
-        const data = await response.json();
-        alert(data.detail || '狀態更新失敗');
+function openDecisionDialog(id, action) {
+
+    const request =
+        allRequests.find(
+            r => Number(r.id) === Number(id)
+        );
+
+    if (!request) {
+        alert('找不到採購申請');
         return;
     }
+
+
+    pendingDecision = {
+        id,
+        action
+    };
+
+
+    const isApprove =
+        action === 'approve';
+
+
+    document.getElementById(
+        'decision-title'
+    ).textContent =
+        isApprove
+            ? '核准採購申請'
+            : '駁回採購申請';
+
+
+    document.getElementById(
+        'decision-context'
+    ).textContent =
+        `#${request.id} ${request.item_name}`;
+
+
+    const confirmButton =
+        document.getElementById(
+            'decision-confirm'
+        );
+
+
+    confirmButton.textContent =
+        isApprove
+            ? '確認核准'
+            : '確認駁回';
+
+
+    confirmButton.classList.remove(
+        'approve',
+        'reject'
+    );
+
+    confirmButton.classList.add(
+        isApprove
+            ? 'approve'
+            : 'reject'
+    );
+
+
+    document.getElementById(
+        'decision-note'
+    ).value = '';
+
+
+    const actor =
+        document.getElementById(
+            'decision-actor'
+        );
+
+    if (!actor.value.trim()) {
+        actor.value = 'Austin';
+    }
+
+
+    document.getElementById(
+        'decision-dialog'
+    ).showModal();
+
+
+    actor.focus();
+}
+
+
+async function submitDecision() {
+
+    if (!pendingDecision) {
+        return;
+    }
+
+
+    const decidedBy =
+        document.getElementById(
+            'decision-actor'
+        ).value.trim();
+
+
+    const decisionNote =
+        document.getElementById(
+            'decision-note'
+        ).value.trim();
+
+
+    if (!decidedBy) {
+        alert('請輸入審核人');
+        return;
+    }
+
+
+    if (!decisionNote) {
+        alert('請輸入審核理由');
+        return;
+    }
+
+
+    const response =
+        await fetch(
+            `/requests/${pendingDecision.id}/${pendingDecision.action}`,
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body: JSON.stringify({
+                    decided_by: decidedBy,
+                    decision_note: decisionNote
+                })
+            }
+        );
+
+
+    if (!response.ok) {
+
+        const data =
+            await response.json();
+
+        alert(
+            data.detail ||
+            '審核決策寫入失敗'
+        );
+
+        return;
+    }
+
+
+    document.getElementById(
+        'decision-dialog'
+    ).close();
+
+
+    pendingDecision = null;
+
 
     await loadRequests();
 
     showWorkspace('requests');
 }
 
+
+document.getElementById(
+    'decision-form'
+).addEventListener(
+    'submit',
+    async event => {
+
+        event.preventDefault();
+
+        await submitDecision();
+    }
+);
+
+
+document.getElementById(
+    'decision-cancel'
+).addEventListener(
+    'click',
+    () => {
+
+        pendingDecision = null;
+
+        document.getElementById(
+            'decision-dialog'
+        ).close();
+    }
+);
+
+
+document.getElementById(
+    'decision-dialog'
+).addEventListener(
+    'cancel',
+    () => {
+        pendingDecision = null;
+    }
+);
+
+
+// P05-W5-B - Decision Input
 
 document.getElementById('form')
 .addEventListener('submit', async e => {
