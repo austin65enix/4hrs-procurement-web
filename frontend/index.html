@@ -1365,8 +1365,14 @@ function exportFilteredRequests() {
         'quantity',
         'unit_price',
         'total_amount',
-        'status'
+        'status',
+        'created_at',
+        'decided_at',
+        'decided_by',
+        'decision_note'
     ];
+
+    // P05-W5-D - Decision Evidence Export
 
     const csvRows = [
         header.join(',')
@@ -1381,7 +1387,11 @@ function exportFilteredRequests() {
             r.quantity,
             r.unit_price,
             r.total_amount,
-            r.status
+            r.status,
+            r.created_at,
+            r.decided_at,
+            r.decided_by,
+            r.decision_note
         ]
         .map(csvEscape)
         .join(','));
@@ -1413,7 +1423,7 @@ function exportFilteredRequests() {
     link.href = url;
 
     link.download =
-        `4hrs-procurement-${stamp}.csv`;
+        `4hrs-procurement-evidence-${stamp}.csv`;
 
     document.body.appendChild(link);
 
