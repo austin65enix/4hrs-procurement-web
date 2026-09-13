@@ -33,7 +33,9 @@ def init_db():
                 total_amount REAL NOT NULL,
                 status TEXT NOT NULL,
                 created_at TEXT NOT NULL,
-                decided_at TEXT
+                decided_at TEXT,
+                decided_by TEXT,
+                decision_note TEXT
             )
         """)
 
@@ -50,6 +52,18 @@ def init_db():
                 "ADD COLUMN decided_at TEXT"
             )
 
+        if "decided_by" not in columns:
+            conn.execute(
+                "ALTER TABLE purchase_requests "
+                "ADD COLUMN decided_by TEXT"
+            )
+
+        if "decision_note" not in columns:
+            conn.execute(
+                "ALTER TABLE purchase_requests "
+                "ADD COLUMN decision_note TEXT"
+            )
+
         conn.commit()
 
 
@@ -63,6 +77,21 @@ class PurchaseRequestCreate(BaseModel):
     item_name: str = Field(min_length=1)
     quantity: int = Field(gt=0)
     unit_price: float = Field(gt=0)
+
+
+class DecisionMetadata(BaseModel):
+    decided_by: str = Field(
+        min_length=1,
+        max_length=100
+    )
+
+    decision_note: str = Field(
+        min_length=1,
+        max_length=500
+    )
+
+
+# P05-W5-A - Decision Metadata Contract
 
 
 @app.get("/")
