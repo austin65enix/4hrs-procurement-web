@@ -4,15 +4,17 @@ import sqlite3
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 
-APP_VERSION = "0.2.0"
+APP_VERSION = "0.3.0"
 SCENARIO_ID = "medical-review"
-PHASE = "P06-M3-B"
+PHASE = "P06-M3-C"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / "data" / "medical.db"
+MEDICAL_UI_PATH = BASE_DIR / "frontend" / "medical.html"
 
 
 app = FastAPI(
@@ -156,6 +158,20 @@ def root():
         "scenario_id": SCENARIO_ID,
         "phase": PHASE
     }
+
+
+@app.get("/workspace", include_in_schema=False)
+def workspace():
+
+    if not MEDICAL_UI_PATH.exists():
+        raise HTTPException(
+            503,
+            "Medical workspace unavailable"
+        )
+
+    return FileResponse(
+        MEDICAL_UI_PATH
+    )
 
 
 @app.get("/healthz")

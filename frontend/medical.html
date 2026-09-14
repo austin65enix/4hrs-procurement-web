@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+
+<meta charset="UTF-8">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+>
+
+<title>4HRS Medical Review</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family:
+        Arial,
+        "Microsoft JhengHei",
+        sans-serif;
+    background: #f4f6f8;
+    color: #1f2937;
+}
+
+header {
+    background: #17212b;
+    color: white;
+    padding: 26px 36px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 26px;
+}
+
+header p {
+    margin: 7px 0 0;
+    color: #cbd5e1;
+}
+
+.safety-banner {
+    margin: 18px 36px 0;
+    padding: 13px 16px;
+    border: 1px solid #f0c36d;
+    background: #fff8e6;
+    border-radius: 10px;
+    color: #7c5200;
+    font-size: 14px;
+}
+
+.workspace-nav {
+    margin: 18px 36px 0;
+    padding: 12px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+
+.workspace-nav-inner {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.workspace-tab {
+    padding: 10px 17px;
+    border: 1px solid #d5dce5;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.workspace-tab.active {
+    background: #2167d5;
+    border-color: #2167d5;
+    color: white;
+}
+
+.workspace {
+    padding: 22px 36px 40px;
+}
+
+.workspace-view {
+    display: none;
+}
+
+.workspace-view.active {
+    display: block;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.stat-value {
+    margin-top: 7px;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.dashboard-lower {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 18px;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+h3 {
+    margin-top: 0;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+label {
+    display: block;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    font: inherit;
+    background: white;
+}
+
+textarea {
+    min-height: 105px;
+    resize: vertical;
+}
+
+.full {
+    grid-column: 1 / -1;
+}
+
+button {
+    border: 0;
+    border-radius: 7px;
+    padding: 9px 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.primary {
+    background: #2167d5;
+    color: white;
+}
+
+.accept {
+    background: #16803c;
+    color: white;
+}
+
+.return {
+    background: #b45309;
+    color: white;
+}
+
+.secondary {
+    background: #e8edf3;
+    color: #334155;
+}
+
+.submit-row {
+    margin-top: 18px;
+}
+
+.tools {
+    display: grid;
+    grid-template-columns: 1fr 190px;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.review-list,
+.history-list,
+.recent-list {
+    display: grid;
+    gap: 11px;
+}
+
+.review-item,
+.history-item,
+.recent-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 15px;
+    background: white;
+}
+
+.review-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.review-ref {
+    font-weight: 800;
+}
+
+.meta {
+    margin-top: 5px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.status {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.PENDING_REVIEW {
+    background: #fff4d6;
+    color: #8a5a00;
+}
+
+.ACCEPTED {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.RETURNED {
+    background: #ffedd5;
+    color: #9a3412;
+}
+
+.actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.detail-panel {
+    margin-top: 12px;
+    padding: 14px;
+    border-radius: 9px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 135px 1fr;
+    gap: 8px 12px;
+    font-size: 14px;
+}
+
+.detail-label {
+    color: #64748b;
+    font-weight: 700;
+}
+
+.detail-value {
+    word-break: break-word;
+}
+
+.empty {
+    padding: 22px;
+    text-align: center;
+    color: #64748b;
+}
+
+.notice {
+    margin-top: 12px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.trend-row {
+    display: grid;
+    grid-template-columns: 105px 1fr 34px;
+    gap: 10px;
+    align-items: center;
+    margin: 9px 0;
+    font-size: 13px;
+}
+
+.trend-track {
+    height: 10px;
+    border-radius: 999px;
+    background: #e8edf3;
+    overflow: hidden;
+}
+
+.trend-bar {
+    height: 100%;
+    background: #2167d5;
+}
+
+dialog {
+    width: min(520px, calc(100vw - 30px));
+    border: 0;
+    padding: 0;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+
+dialog::backdrop {
+    background: rgba(15,23,42,.5);
+}
+
+.dialog-body {
+    padding: 22px;
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.error {
+    margin-top: 12px;
+    color: #b91c1c;
+    font-size: 13px;
+}
+
+.success {
+    margin-top: 12px;
+    color: #166534;
+    font-size: 13px;
+}
+
+@media (max-width: 820px) {
+
+    .dashboard-grid,
+    .dashboard-lower,
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .full {
+        grid-column: auto;
+    }
+
+    .tools {
+        grid-template-columns: 1fr;
+    }
+
+    .workspace,
+    header {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .workspace-nav,
+    .safety-banner {
+        margin-left: 18px;
+        margin-right: 18px;
+    }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+    <h1>4HRS Medical Review</h1>
+
+    <p>
+        Synthetic administrative review workflow —
+        P06-M3-C
+    </p>
+
+</header>
+
+<div class="safety-banner">
+
+    <strong>Synthetic Lab Only：</strong>
+    不可輸入真實病患姓名、病歷、身分證字號、
+    PHI 或其他真實醫療資料。
+    本系統不提供診斷、治療建議或臨床決策。
+
+</div>
+
+<nav class="workspace-nav">
+
+    <div class="workspace-nav-inner">
+
+        <button
+            class="workspace-tab active"
+            data-view="dashboard"
+        >
+            Dashboard
+        </button>
+
+        <button
+            class="workspace-tab"
+            data-view="new-review"
+        >
+            New Review
+        </button>
+
+        <button
+            class="workspace-tab"
+            data-view="queue"
+        >
+            Review Queue
+        </button>
+
+        <button
+            class="workspace-tab"
+            data-view="history"
+        >
+            History
+        </button>
+
+    </div>
+
+</nav>
+
+<div class="workspace">
+
+<section
+    id="view-dashboard"
+    class="workspace-view active"
+>
+
+    <div class="dashboard-grid">
+
+        <div class="card">
+            <div class="stat-label">
+                Total Reviews
+            </div>
+            <div
+                id="stat-total"
+                class="stat-value"
+            >
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">
+                Pending Review
+            </div>
+            <div
+                id="stat-pending"
+                class="stat-value"
+            >
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">
+                Accepted
+            </div>
+            <div
+                id="stat-accepted"
+                class="stat-value"
+            >
+                0
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="stat-label">
+                Returned
+            </div>
+            <div
+                id="stat-returned"
+                class="stat-value"
+            >
+                0
+            </div>
+        </div>
+
+    </div>
+
+    <div class="dashboard-lower">
+
+        <div class="card">
+
+            <h3>Recent Reviews</h3>
+
+            <div
+                id="recent-list"
+                class="recent-list"
+            ></div>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Submission Trend</h3>
+
+            <div id="trend-list"></div>
+
+            <div class="notice">
+                依 created_at 顯示申請量；
+                不代表醫療品質或臨床結果。
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<section
+    id="view-new-review"
+    class="workspace-view"
+>
+
+    <div class="card">
+
+        <h2>New Review</h2>
+
+        <form id="review-form">
+
+            <div class="form-grid">
+
+                <label>
+                    Requester
+                    <input
+                        id="requester"
+                        required
+                        maxlength="100"
+                    >
+                </label>
+
+                <label>
+                    Department
+                    <select
+                        id="department"
+                        required
+                    >
+                        <option value="">
+                            Select
+                        </option>
+                        <option>
+                            Internal Medicine
+                        </option>
+                        <option>
+                            Radiology
+                        </option>
+                        <option>
+                            Nursing
+                        </option>
+                        <option>
+                            Pharmacy
+                        </option>
+                    </select>
+                </label>
+
+                <label>
+                    Case Reference
+                    <input
+                        id="case-reference"
+                        required
+                        maxlength="100"
+                        placeholder="MED-LAB-..."
+                    >
+                </label>
+
+                <label>
+                    Request Type
+                    <select
+                        id="request-type"
+                        required
+                    >
+                        <option value="">
+                            Select
+                        </option>
+                        <option>
+                            Specialist Review Request
+                        </option>
+                        <option>
+                            Documentation Review
+                        </option>
+                        <option>
+                            Resource Coordination
+                        </option>
+                        <option>
+                            Follow-up Review
+                        </option>
+                    </select>
+                </label>
+
+                <label>
+                    Priority
+                    <select
+                        id="priority"
+                        required
+                    >
+                        <option value="ROUTINE">
+                            ROUTINE
+                        </option>
+                        <option value="PRIORITY">
+                            PRIORITY
+                        </option>
+                    </select>
+                </label>
+
+                <label class="full">
+                    Summary
+                    <textarea
+                        id="summary"
+                        required
+                        maxlength="1000"
+                    ></textarea>
+                </label>
+
+            </div>
+
+            <div class="notice">
+                Priority 是 workflow metadata，
+                不是 clinical triage。
+            </div>
+
+            <div class="submit-row">
+
+                <button
+                    class="primary"
+                    type="submit"
+                >
+                    Create Review
+                </button>
+
+            </div>
+
+            <div id="form-message"></div>
+
+        </form>
+
+    </div>
+
+</section>
+
+<section
+    id="view-queue"
+    class="workspace-view"
+>
+
+    <div class="card">
+
+        <h2>Review Queue</h2>
+
+        <div class="tools">
+
+            <input
+                id="search-input"
+                placeholder="Search reference, requester, department or type"
+            >
+
+            <select id="status-filter">
+
+                <option value="ALL">
+                    ALL
+                </option>
+
+                <option value="PENDING_REVIEW">
+                    PENDING_REVIEW
+                </option>
+
+                <option value="ACCEPTED">
+                    ACCEPTED
+                </option>
+
+                <option value="RETURNED">
+                    RETURNED
+                </option>
+
+            </select>
+
+        </div>
+
+        <div
+            id="review-list"
+            class="review-list"
+        ></div>
+
+    </div>
+
+</section>
+
+<section
+    id="view-history"
+    class="workspace-view"
+>
+
+    <div class="card">
+
+        <h2>History</h2>
+
+        <div
+            id="history-list"
+            class="history-list"
+        ></div>
+
+        <div class="notice">
+            History 僅呈現 terminal review evidence，
+            不等同完整 audit log。
+        </div>
+
+    </div>
+
+</section>
+
+</div>
+
+<dialog id="decision-dialog">
+
+    <div class="dialog-body">
+
+        <h3 id="decision-title">
+            Decision
+        </h3>
+
+        <div
+            id="decision-case"
+            class="meta"
+        ></div>
+
+        <label>
+            Reviewer
+            <input
+                id="decision-actor"
+                maxlength="100"
+                required
+            >
+        </label>
+
+        <label>
+            Review Note
+            <textarea
+                id="decision-note"
+                maxlength="500"
+                required
+            ></textarea>
+        </label>
+
+        <div class="notice">
+            Reviewer 為 self-asserted identity；
+            尚未經 Authentication / IAM 驗證。
+        </div>
+
+        <div
+            id="decision-error"
+            class="error"
+        ></div>
+
+        <div class="dialog-actions">
+
+            <button
+                id="decision-cancel"
+                class="secondary"
+                type="button"
+            >
+                Cancel
+            </button>
+
+            <button
+                id="decision-submit"
+                class="primary"
+                type="button"
+            >
+                Submit
+            </button>
+
+        </div>
+
+    </div>
+
+</dialog>
+
+<script>
+
+let reviews = [];
+
+let decisionContext = null;
+
+const tabs =
+    document.querySelectorAll(
+        ".workspace-tab"
+    );
+
+const views =
+    document.querySelectorAll(
+        ".workspace-view"
+    );
+
+
+function escapeHtml(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+function showValue(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return "未記錄";
+    }
+
+    return escapeHtml(value);
+}
+
+
+function formatTime(value) {
+
+    if (!value) {
+        return "未記錄";
+    }
+
+    const date =
+        new Date(value);
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+        return escapeHtml(value);
+    }
+
+    return date.toLocaleString(
+        "zh-TW"
+    );
+}
+
+
+function switchView(name) {
+
+    tabs.forEach(tab => {
+
+        tab.classList.toggle(
+            "active",
+            tab.dataset.view === name
+        );
+    });
+
+    views.forEach(view => {
+
+        view.classList.toggle(
+            "active",
+            view.id ===
+                `view-${name}`
+        );
+    });
+}
+
+
+tabs.forEach(tab => {
+
+    tab.addEventListener(
+        "click",
+        () => {
+
+            switchView(
+                tab.dataset.view
+            );
+        }
+    );
+});
+
+
+async function api(
+    path,
+    options = {}
+) {
+
+    const response =
+        await fetch(
+            path,
+            options
+        );
+
+    let payload = null;
+
+    try {
+        payload =
+            await response.json();
+    }
+    catch {
+    }
+
+    if (!response.ok) {
+
+        const detail =
+            payload?.detail ||
+            `HTTP ${response.status}`;
+
+        throw new Error(detail);
+    }
+
+    return payload;
+}
+
+
+async function loadReviews() {
+
+    reviews =
+        await api(
+            "/reviews"
+        );
+
+    renderAll();
+}
+
+
+function renderAll() {
+
+    renderDashboard();
+    renderQueue();
+    renderHistory();
+}
+
+
+function renderDashboard() {
+
+    const total =
+        reviews.length;
+
+    const pending =
+        reviews.filter(
+            r =>
+                r.status ===
+                "PENDING_REVIEW"
+        ).length;
+
+    const accepted =
+        reviews.filter(
+            r =>
+                r.status ===
+                "ACCEPTED"
+        ).length;
+
+    const returned =
+        reviews.filter(
+            r =>
+                r.status ===
+                "RETURNED"
+        ).length;
+
+    document.getElementById(
+        "stat-total"
+    ).textContent = total;
+
+    document.getElementById(
+        "stat-pending"
+    ).textContent = pending;
+
+    document.getElementById(
+        "stat-accepted"
+    ).textContent = accepted;
+
+    document.getElementById(
+        "stat-returned"
+    ).textContent = returned;
+
+    renderRecent();
+    renderTrend();
+}
+
+
+function renderRecent() {
+
+    const target =
+        document.getElementById(
+            "recent-list"
+        );
+
+    const recent =
+        [...reviews]
+        .sort(
+            (a, b) =>
+                new Date(b.created_at) -
+                new Date(a.created_at)
+        )
+        .slice(0, 5);
+
+    if (!recent.length) {
+
+        target.innerHTML =
+            '<div class="empty">No reviews</div>';
+
+        return;
+    }
+
+    target.innerHTML =
+        recent.map(review => `
+            <div class="recent-item">
+
+                <div class="review-head">
+
+                    <div>
+                        <div class="review-ref">
+                            ${escapeHtml(review.case_reference)}
+                        </div>
+
+                        <div class="meta">
+                            ${escapeHtml(review.requester)}
+                            ·
+                            ${escapeHtml(review.request_type)}
+                        </div>
+                    </div>
+
+                    <span class="status ${escapeHtml(review.status)}">
+                        ${escapeHtml(review.status)}
+                    </span>
+
+                </div>
+
+            </div>
+        `).join("");
+}
+
+
+function renderTrend() {
+
+    const target =
+        document.getElementById(
+            "trend-list"
+        );
+
+    const counts = {};
+
+    reviews.forEach(review => {
+
+        if (!review.created_at) {
+            return;
+        }
+
+        const date =
+            new Date(
+                review.created_at
+            );
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+            return;
+        }
+
+        const key =
+            date.toISOString()
+                .slice(0, 10);
+
+        counts[key] =
+            (counts[key] || 0) + 1;
+    });
+
+    const entries =
+        Object.entries(counts)
+            .sort(
+                (a, b) =>
+                    a[0].localeCompare(
+                        b[0]
+                    )
+            )
+            .slice(-7);
+
+    if (!entries.length) {
+
+        target.innerHTML =
+            '<div class="empty">No trend data</div>';
+
+        return;
+    }
+
+    const max =
+        Math.max(
+            ...entries.map(
+                entry => entry[1]
+            ),
+            1
+        );
+
+    target.innerHTML =
+        entries.map(
+            ([date, count]) => {
+
+                const width =
+                    Math.round(
+                        count / max * 100
+                    );
+
+                return `
+                    <div class="trend-row">
+
+                        <div>
+                            ${escapeHtml(date)}
+                        </div>
+
+                        <div class="trend-track">
+                            <div
+                                class="trend-bar"
+                                style="width:${width}%"
+                            ></div>
+                        </div>
+
+                        <div>
+                            ${count}
+                        </div>
+
+                    </div>
+                `;
+            }
+        ).join("");
+}
+
+
+function getFilteredReviews() {
+
+    const term =
+        document.getElementById(
+            "search-input"
+        )
+        .value
+        .trim()
+        .toLowerCase();
+
+    const status =
+        document.getElementById(
+            "status-filter"
+        ).value;
+
+    return reviews.filter(
+        review => {
+
+            const statusMatch =
+                status === "ALL" ||
+                review.status === status;
+
+            const haystack = [
+                review.case_reference,
+                review.requester,
+                review.department,
+                review.request_type,
+                review.status
+            ]
+            .join(" ")
+            .toLowerCase();
+
+            const searchMatch =
+                !term ||
+                haystack.includes(term);
+
+            return (
+                statusMatch &&
+                searchMatch
+            );
+        }
+    );
+}
+
+
+function reviewCard(review) {
+
+    const pending =
+        review.status ===
+        "PENDING_REVIEW";
+
+    const decisionActions =
+        pending
+        ? `
+            <button
+                class="accept"
+                onclick="openDecision(
+                    ${review.id},
+                    'accept'
+                )"
+            >
+                Accept
+            </button>
+
+            <button
+                class="return"
+                onclick="openDecision(
+                    ${review.id},
+                    'return'
+                )"
+            >
+                Return
+            </button>
+        `
+        : "";
+
+    return `
+        <div class="review-item">
+
+            <div class="review-head">
+
+                <div>
+
+                    <div class="review-ref">
+                        ${escapeHtml(review.case_reference)}
+                    </div>
+
+                    <div class="meta">
+                        ${escapeHtml(review.requester)}
+                        ·
+                        ${escapeHtml(review.department)}
+                        ·
+                        ${escapeHtml(review.request_type)}
+                    </div>
+
+                </div>
+
+                <span class="status ${escapeHtml(review.status)}">
+                    ${escapeHtml(review.status)}
+                </span>
+
+            </div>
+
+            <div class="actions">
+
+                <button
+                    class="secondary"
+                    onclick="toggleDetail(
+                        ${review.id}
+                    )"
+                >
+                    Detail
+                </button>
+
+                ${decisionActions}
+
+            </div>
+
+            <div
+                id="detail-${review.id}"
+                class="detail-panel"
+                hidden
+            ></div>
+
+        </div>
+    `;
+}
+
+
+function renderQueue() {
+
+    const target =
+        document.getElementById(
+            "review-list"
+        );
+
+    const filtered =
+        getFilteredReviews();
+
+    if (!filtered.length) {
+
+        target.innerHTML =
+            '<div class="empty">No matching reviews</div>';
+
+        return;
+    }
+
+    target.innerHTML =
+        filtered.map(
+            reviewCard
+        ).join("");
+}
+
+
+function renderHistory() {
+
+    const target =
+        document.getElementById(
+            "history-list"
+        );
+
+    const history =
+        reviews.filter(
+            review =>
+                review.status === "ACCEPTED" ||
+                review.status === "RETURNED"
+        );
+
+    if (!history.length) {
+
+        target.innerHTML =
+            '<div class="empty">No completed reviews</div>';
+
+        return;
+    }
+
+    target.innerHTML =
+        history.map(review => `
+            <div class="history-item">
+
+                <div class="review-head">
+
+                    <div>
+                        <div class="review-ref">
+                            ${escapeHtml(review.case_reference)}
+                        </div>
+
+                        <div class="meta">
+                            ${escapeHtml(review.requester)}
+                            ·
+                            ${escapeHtml(review.department)}
+                        </div>
+                    </div>
+
+                    <span class="status ${escapeHtml(review.status)}">
+                        ${escapeHtml(review.status)}
+                    </span>
+
+                </div>
+
+                <div class="detail-panel">
+
+                    <div class="detail-grid">
+
+                        <div class="detail-label">
+                            Reviewer
+                        </div>
+                        <div class="detail-value">
+                            ${showValue(review.decided_by)}
+                        </div>
+
+                        <div class="detail-label">
+                            Review Note
+                        </div>
+                        <div class="detail-value">
+                            ${showValue(review.decision_note)}
+                        </div>
+
+                        <div class="detail-label">
+                            Submitted
+                        </div>
+                        <div class="detail-value">
+                            ${formatTime(review.created_at)}
+                        </div>
+
+                        <div class="detail-label">
+                            Decided
+                        </div>
+                        <div class="detail-value">
+                            ${formatTime(review.decided_at)}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        `).join("");
+}
+
+
+async function toggleDetail(id) {
+
+    const panel =
+        document.getElementById(
+            `detail-${id}`
+        );
+
+    if (!panel.hidden) {
+
+        panel.hidden = true;
+
+        return;
+    }
+
+    try {
+
+        const review =
+            await api(
+                `/reviews/${id}`
+            );
+
+        panel.innerHTML = `
+            <div class="detail-grid">
+
+                <div class="detail-label">
+                    ID
+                </div>
+                <div class="detail-value">
+                    ${review.id}
+                </div>
+
+                <div class="detail-label">
+                    Case Reference
+                </div>
+                <div class="detail-value">
+                    ${escapeHtml(review.case_reference)}
+                </div>
+
+                <div class="detail-label">
+                    Requester
+                </div>
+                <div class="detail-value">
+                    ${escapeHtml(review.requester)}
+                </div>
+
+                <div class="detail-label">
+                    Department
+                </div>
+                <div class="detail-value">
+                    ${escapeHtml(review.department)}
+                </div>
+
+                <div class="detail-label">
+                    Request Type
+                </div>
+                <div class="detail-value">
+                    ${escapeHtml(review.request_type)}
+                </div>
+
+                <div class="detail-label">
+                    Priority
+                </div>
+                <div class="detail-value">
+                    ${escapeHtml(review.priority)}
+                </div>
+
+                <div class="detail-label">
+                    Summary
+                </div>
+                <div class="detail-value">
+                    ${escapeHtml(review.summary)}
+                </div>
+
+                <div class="detail-label">
+                    Status
+                </div>
+                <div class="detail-value">
+                    ${escapeHtml(review.status)}
+                </div>
+
+                <div class="detail-label">
+                    Submitted
+                </div>
+                <div class="detail-value">
+                    ${formatTime(review.created_at)}
+                </div>
+
+                <div class="detail-label">
+                    Reviewer
+                </div>
+                <div class="detail-value">
+                    ${showValue(review.decided_by)}
+                </div>
+
+                <div class="detail-label">
+                    Review Note
+                </div>
+                <div class="detail-value">
+                    ${showValue(review.decision_note)}
+                </div>
+
+                <div class="detail-label">
+                    Decided
+                </div>
+                <div class="detail-value">
+                    ${formatTime(review.decided_at)}
+                </div>
+
+            </div>
+        `;
+
+        panel.hidden = false;
+    }
+    catch (error) {
+
+        alert(
+            error.message
+        );
+    }
+}
+
+
+function openDecision(
+    id,
+    action
+) {
+
+    const review =
+        reviews.find(
+            item => item.id === id
+        );
+
+    if (!review) {
+        return;
+    }
+
+    decisionContext = {
+        id,
+        action
+    };
+
+    document.getElementById(
+        "decision-title"
+    ).textContent =
+        action === "accept"
+        ? "Accept Review"
+        : "Return Review";
+
+    document.getElementById(
+        "decision-case"
+    ).textContent =
+        review.case_reference;
+
+    document.getElementById(
+        "decision-actor"
+    ).value = "";
+
+    document.getElementById(
+        "decision-note"
+    ).value = "";
+
+    document.getElementById(
+        "decision-error"
+    ).textContent = "";
+
+    document.getElementById(
+        "decision-dialog"
+    ).showModal();
+}
+
+
+document.getElementById(
+    "decision-cancel"
+).addEventListener(
+    "click",
+    () => {
+
+        decisionContext = null;
+
+        document.getElementById(
+            "decision-dialog"
+        ).close();
+    }
+);
+
+
+document.getElementById(
+    "decision-submit"
+).addEventListener(
+    "click",
+    async () => {
+
+        if (!decisionContext) {
+            return;
+        }
+
+        const actor =
+            document.getElementById(
+                "decision-actor"
+            ).value.trim();
+
+        const note =
+            document.getElementById(
+                "decision-note"
+            ).value.trim();
+
+        const errorTarget =
+            document.getElementById(
+                "decision-error"
+            );
+
+        if (!actor || !note) {
+
+            errorTarget.textContent =
+                "Reviewer and Review Note are required.";
+
+            return;
+        }
+
+        try {
+
+            await api(
+                `/reviews/${decisionContext.id}/${decisionContext.action}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body: JSON.stringify({
+                        decided_by: actor,
+                        decision_note: note
+                    })
+                }
+            );
+
+            document.getElementById(
+                "decision-dialog"
+            ).close();
+
+            decisionContext = null;
+
+            await loadReviews();
+        }
+        catch (error) {
+
+            errorTarget.textContent =
+                error.message;
+        }
+    }
+);
+
+
+document.getElementById(
+    "review-form"
+).addEventListener(
+    "submit",
+    async event => {
+
+        event.preventDefault();
+
+        const message =
+            document.getElementById(
+                "form-message"
+            );
+
+        message.className = "";
+        message.textContent = "";
+
+        const body = {
+
+            requester:
+                document.getElementById(
+                    "requester"
+                ).value.trim(),
+
+            department:
+                document.getElementById(
+                    "department"
+                ).value,
+
+            case_reference:
+                document.getElementById(
+                    "case-reference"
+                ).value.trim(),
+
+            request_type:
+                document.getElementById(
+                    "request-type"
+                ).value,
+
+            priority:
+                document.getElementById(
+                    "priority"
+                ).value,
+
+            summary:
+                document.getElementById(
+                    "summary"
+                ).value.trim()
+        };
+
+        try {
+
+            const created =
+                await api(
+                    "/reviews",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+                        body:
+                            JSON.stringify(
+                                body
+                            )
+                    }
+                );
+
+            event.target.reset();
+
+            message.className =
+                "success";
+
+            message.textContent =
+                `Created ${created.case_reference}`;
+
+            await loadReviews();
+
+            document.getElementById(
+                "status-filter"
+            ).value =
+                "PENDING_REVIEW";
+
+            document.getElementById(
+                "search-input"
+            ).value =
+                created.case_reference;
+
+            renderQueue();
+
+            switchView(
+                "queue"
+            );
+        }
+        catch (error) {
+
+            message.className =
+                "error";
+
+            message.textContent =
+                error.message;
+        }
+    }
+);
+
+
+document.getElementById(
+    "search-input"
+).addEventListener(
+    "input",
+    renderQueue
+);
+
+
+document.getElementById(
+    "status-filter"
+).addEventListener(
+    "change",
+    renderQueue
+);
+
+
+loadReviews().catch(
+    error => {
+
+        document.body.insertAdjacentHTML(
+            "beforeend",
+            `<div class="error" style="padding:20px">
+                ${escapeHtml(error.message)}
+            </div>`
+        );
+    }
+);
+
+</script>
+
+</body>
+</html>
