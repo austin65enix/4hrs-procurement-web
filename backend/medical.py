@@ -8,9 +8,9 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.3.1"
 SCENARIO_ID = "medical-review"
-PHASE = "P06-M3-C"
+PHASE = "P06-M3-C-ADJ1"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / "data" / "medical.db"
@@ -69,12 +69,40 @@ def init_db():
 
                 created_at TEXT NOT NULL,
 
+                updated_at TEXT,
+                updated_by TEXT,
+                update_note TEXT,
+
                 decided_at TEXT,
                 decided_by TEXT,
                 decision_note TEXT
             )
             """
         )
+
+        columns = {
+            row["name"]
+            for row in conn.execute(
+                "PRAGMA table_info(medical_reviews)"
+            ).fetchall()
+        }
+
+        migrations = {
+            "updated_at": "TEXT",
+            "updated_by": "TEXT",
+            "update_note": "TEXT",
+        }
+
+        for column_name, column_type in migrations.items():
+
+            if column_name not in columns:
+
+                conn.execute(
+                    f"""
+                    ALTER TABLE medical_reviews
+                    ADD COLUMN {column_name} {column_type}
+                    """
+                )
 
         conn.execute(
             """
@@ -120,6 +148,44 @@ class MedicalReviewCreate(BaseModel):
     summary: str = Field(
         min_length=1,
         max_length=1000
+    )
+
+
+class MedicalReviewUpdate(BaseModel):
+
+    requester: str = Field(
+        min_length=1,
+        max_length=100
+    )
+
+    department: str = Field(
+        min_length=1,
+        max_length=100
+    )
+
+    request_type: str = Field(
+        min_length=1,
+        max_length=150
+    )
+
+    priority: Literal[
+        "ROUTINE",
+        "PRIORITY"
+    ]
+
+    summary: str = Field(
+        min_length=1,
+        max_length=1000
+    )
+
+    updated_by: str = Field(
+        min_length=1,
+        max_length=100
+    )
+
+    update_note: str = Field(
+        min_length=1,
+        max_length=500
     )
 
 
@@ -325,6 +391,122 @@ def create_review(
         "case_reference": case_reference,
         "status": "PENDING_REVIEW",
         "created_at": created_at
+    }
+
+
+@app.put("/reviews/{review_id}")
+def update_review(
+    review_id: int,
+    review: MedicalReviewUpdate
+):
+
+    requester = require_text(
+        review.requester,
+        "requester"
+    )
+
+    department = require_text(
+        review.department,
+        "department"
+    )
+
+    request_type = require_text(
+        review.request_type,
+        "request_type"
+    )
+
+    summary = require_text(
+        review.summary,
+        "summary"
+    )
+
+    updated_by = require_text(
+        review.updated_by,
+        "updated_by"
+    )
+
+    update_note = require_text(
+        review.update_note,
+        "update_note"
+    )
+
+    with get_db() as conn:
+
+        row = conn.execute(
+            """
+            SELECT
+                status,
+                case_reference,
+                created_at
+            FROM medical_reviews
+            WHERE id=?
+            """,
+            (review_id,)
+        ).fetchone()
+
+        if row is None:
+            raise HTTPException(
+                404,
+                "Review not found"
+            )
+
+        if row["status"] != "PENDING_REVIEW":
+            raise HTTPException(
+                409,
+                "Only pending reviews may be amended"
+            )
+
+        updated_at = (
+            datetime.now(
+                timezone.utc
+            ).isoformat()
+        )
+
+        cur = conn.execute(
+            """
+            UPDATE medical_reviews
+            SET
+                requester=?,
+                department=?,
+                request_type=?,
+                priority=?,
+                summary=?,
+                updated_at=?,
+                updated_by=?,
+                update_note=?
+            WHERE
+                id=?
+                AND status='PENDING_REVIEW'
+            """,
+            (
+                requester,
+                department,
+                request_type,
+                review.priority,
+                summary,
+                updated_at,
+                updated_by,
+                update_note,
+                review_id
+            )
+        )
+
+        if cur.rowcount != 1:
+            raise HTTPException(
+                409,
+                "Review state changed"
+            )
+
+        conn.commit()
+
+    return {
+        "id": review_id,
+        "case_reference": row["case_reference"],
+        "status": "PENDING_REVIEW",
+        "created_at": row["created_at"],
+        "updated_at": updated_at,
+        "updated_by": updated_by,
+        "update_note": update_note
     }
 
 

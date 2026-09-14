@@ -402,7 +402,7 @@ dialog::backdrop {
 
     <p>
         Synthetic administrative review workflow —
-        P06-M3-C
+        P06-M3-C-ADJ1
     </p>
 
 </header>
@@ -743,6 +743,155 @@ dialog::backdrop {
 
 </div>
 
+<dialog id="edit-dialog">
+
+    <div class="dialog-body">
+
+        <h3>Edit Pending Review</h3>
+
+        <div
+            id="edit-case"
+            class="meta"
+        ></div>
+
+        <div class="notice">
+            Case Reference ? stable identity?
+            ????????
+        </div>
+
+        <label>
+            Requester
+            <input
+                id="edit-requester"
+                maxlength="100"
+                required
+            >
+        </label>
+
+        <label>
+            Department
+            <select id="edit-department">
+
+                <option>
+                    Internal Medicine
+                </option>
+
+                <option>
+                    Radiology
+                </option>
+
+                <option>
+                    Nursing
+                </option>
+
+                <option>
+                    Pharmacy
+                </option>
+
+            </select>
+        </label>
+
+        <label>
+            Request Type
+            <select id="edit-request-type">
+
+                <option>
+                    Specialist Review Request
+                </option>
+
+                <option>
+                    Documentation Review
+                </option>
+
+                <option>
+                    Resource Coordination
+                </option>
+
+                <option>
+                    Follow-up Review
+                </option>
+
+            </select>
+        </label>
+
+        <label>
+            Priority
+            <select id="edit-priority">
+
+                <option value="ROUTINE">
+                    ROUTINE
+                </option>
+
+                <option value="PRIORITY">
+                    PRIORITY
+                </option>
+
+            </select>
+        </label>
+
+        <label>
+            Summary
+            <textarea
+                id="edit-summary"
+                maxlength="1000"
+                required
+            ></textarea>
+        </label>
+
+        <label>
+            Amended By
+            <input
+                id="edit-actor"
+                maxlength="100"
+                required
+            >
+        </label>
+
+        <label>
+            Amendment Note
+            <textarea
+                id="edit-note"
+                maxlength="500"
+                required
+            ></textarea>
+        </label>
+
+        <div class="notice">
+            Amended By ? self-asserted identity?
+            ADJ1 ??????? amendment metadata?
+            ????? revision history?
+        </div>
+
+        <div
+            id="edit-error"
+            class="error"
+        ></div>
+
+        <div class="dialog-actions">
+
+            <button
+                id="edit-cancel"
+                class="secondary"
+                type="button"
+            >
+                Cancel
+            </button>
+
+            <button
+                id="edit-submit"
+                class="primary"
+                type="button"
+            >
+                Save Amendment
+            </button>
+
+        </div>
+
+    </div>
+
+</dialog>
+
+
 <dialog id="decision-dialog">
 
     <div class="dialog-body">
@@ -811,6 +960,8 @@ dialog::backdrop {
 <script>
 
 let reviews = [];
+
+let editContext = null;
 
 let decisionContext = null;
 
@@ -1218,6 +1369,15 @@ function reviewCard(review) {
         pending
         ? `
             <button
+                class="secondary"
+                onclick="openEdit(
+                    ${review.id}
+                )"
+            >
+                Edit
+            </button>
+
+            <button
                 class="accept"
                 onclick="openDecision(
                     ${review.id},
@@ -1366,6 +1526,27 @@ function renderHistory() {
                 <div class="detail-panel">
 
                     <div class="detail-grid">
+
+                        <div class="detail-label">
+                            Last Amended
+                        </div>
+                        <div class="detail-value">
+                            ${formatTime(review.updated_at)}
+                        </div>
+
+                        <div class="detail-label">
+                            Amended By
+                        </div>
+                        <div class="detail-value">
+                            ${showValue(review.updated_by)}
+                        </div>
+
+                        <div class="detail-label">
+                            Amendment Note
+                        </div>
+                        <div class="detail-value">
+                            ${showValue(review.update_note)}
+                        </div>
 
                         <div class="detail-label">
                             Reviewer
@@ -1526,6 +1707,72 @@ async function toggleDetail(id) {
 }
 
 
+function openEdit(id) {
+
+    const review =
+        reviews.find(
+            item => item.id === id
+        );
+
+    if (
+        !review ||
+        review.status !== "PENDING_REVIEW"
+    ) {
+        return;
+    }
+
+    editContext = {
+        id
+    };
+
+    document.getElementById(
+        "edit-case"
+    ).textContent =
+        review.case_reference;
+
+    document.getElementById(
+        "edit-requester"
+    ).value =
+        review.requester;
+
+    document.getElementById(
+        "edit-department"
+    ).value =
+        review.department;
+
+    document.getElementById(
+        "edit-request-type"
+    ).value =
+        review.request_type;
+
+    document.getElementById(
+        "edit-priority"
+    ).value =
+        review.priority;
+
+    document.getElementById(
+        "edit-summary"
+    ).value =
+        review.summary;
+
+    document.getElementById(
+        "edit-actor"
+    ).value = "";
+
+    document.getElementById(
+        "edit-note"
+    ).value = "";
+
+    document.getElementById(
+        "edit-error"
+    ).textContent = "";
+
+    document.getElementById(
+        "edit-dialog"
+    ).showModal();
+}
+
+
 function openDecision(
     id,
     action
@@ -1573,6 +1820,122 @@ function openDecision(
         "decision-dialog"
     ).showModal();
 }
+
+
+document.getElementById(
+    "edit-cancel"
+).addEventListener(
+    "click",
+    () => {
+
+        editContext = null;
+
+        document.getElementById(
+            "edit-dialog"
+        ).close();
+    }
+);
+
+
+document.getElementById(
+    "edit-submit"
+).addEventListener(
+    "click",
+    async () => {
+
+        if (!editContext) {
+            return;
+        }
+
+        const actor =
+            document.getElementById(
+                "edit-actor"
+            ).value.trim();
+
+        const note =
+            document.getElementById(
+                "edit-note"
+            ).value.trim();
+
+        const errorTarget =
+            document.getElementById(
+                "edit-error"
+            );
+
+        if (!actor || !note) {
+
+            errorTarget.textContent =
+                "Amended By and Amendment Note are required.";
+
+            return;
+        }
+
+        const body = {
+
+            requester:
+                document.getElementById(
+                    "edit-requester"
+                ).value.trim(),
+
+            department:
+                document.getElementById(
+                    "edit-department"
+                ).value,
+
+            request_type:
+                document.getElementById(
+                    "edit-request-type"
+                ).value,
+
+            priority:
+                document.getElementById(
+                    "edit-priority"
+                ).value,
+
+            summary:
+                document.getElementById(
+                    "edit-summary"
+                ).value.trim(),
+
+            updated_by:
+                actor,
+
+            update_note:
+                note
+        };
+
+        try {
+
+            await api(
+                `/reviews/${editContext.id}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+                    body:
+                        JSON.stringify(
+                            body
+                        )
+                }
+            );
+
+            document.getElementById(
+                "edit-dialog"
+            ).close();
+
+            editContext = null;
+
+            await loadReviews();
+        }
+        catch (error) {
+
+            errorTarget.textContent =
+                error.message;
+        }
+    }
+);
 
 
 document.getElementById(

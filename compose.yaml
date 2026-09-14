@@ -39,10 +39,10 @@ services:
       context: .
 
     image:
-      4hrs-medical-review:m3c
+      4hrs-medical-review:m3c-adj1
 
     container_name:
-      4hrs-medical-m3c
+      4hrs-medical-m3c-adj1
 
     command:
       [
