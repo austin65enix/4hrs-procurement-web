@@ -39,7 +39,7 @@ services:
       context: .
 
     image:
-      4hrs-medical-review:m3a
+      4hrs-medical-review:m3b
 
     container_name:
       4hrs-medical-m3a
